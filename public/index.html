@@ -36,14 +36,25 @@
                 <h3>Terlambat</h3>
                 <p id="stat-terlambat">0</p>
             </div>
+            <div class="card izin">
+                <h3>Izin</h3>
+                <p id="stat-izin">0</p>
+            </div>
+            <div class="card sakit">
+                <h3>Sakit</h3>
+                <p id="stat-sakit">0</p>
+            </div>
             <div class="card absen">
-                <h3>Belum Absen</h3>
+                <h3>Tanpa Keterangan</h3>
                 <p id="stat-absen">0</p>
             </div>
         </section>
 
         <section class="table-container">
-            <h2>Kehadiran Hari Ini</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2>Kehadiran Hari Ini</h2>
+                <input type="text" id="search-dashboard" placeholder="Cari nama siswa..." oninput="loadDashboard()" style="width: 300px;">
+            </div>
             <table id="today-table">
                 <thead>
                     <tr>
@@ -52,6 +63,8 @@
                         <th>Jam Masuk</th>
                         <th>Jam Pulang</th>
                         <th>Status</th>
+                        <th>Keterangan</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="today-body">
@@ -59,6 +72,32 @@
                 </tbody>
             </table>
         </section>
+
+        <!-- Modal for Izin/Manual Pulang -->
+        <div id="modal-izin" class="modal">
+            <div class="modal-content">
+                <h2>Form Izin / Pulang Cepat</h2>
+                <form id="form-izin">
+                    <input type="hidden" id="izin-siswa-id">
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="izin-status" required>
+                            <option value="Izin">Izin</option>
+                            <option value="Sakit">Sakit</option>
+                            <option value="Pulang Awal">Pulang Awal</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Keterangan / Alasan</label>
+                        <textarea id="izin-keterangan" required placeholder="Contoh: Mengikuti lomba, Sakit gigi, dll"></textarea>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn-secondary" onclick="closeIzinModal()">Batal</button>
+                        <button type="submit" class="btn-primary">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </main>
 
     <script src="app.js"></script>

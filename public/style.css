@@ -77,14 +77,14 @@ header {
 /* Stats Cards */
 .stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
     margin-bottom: 2rem;
 }
 
 .card {
     background: var(--white);
-    padding: 1.5rem;
+    padding: 1rem;
     border-radius: 12px;
     box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
 }
@@ -103,6 +103,8 @@ header {
 .card.hadir p { color: var(--success); }
 .card.terlambat p { color: var(--warning); }
 .card.absen p { color: var(--danger); }
+.card.izin p { color: var(--secondary); }
+.card.sakit p { color: #a855f7; }
 
 /* Table */
 .table-container {
@@ -142,6 +144,9 @@ td {
 .status-hadir { background: #dcfce7; color: #166534; }
 .status-terlambat { background: #fef3c7; color: #92400e; }
 .status-absen { background: #fee2e2; color: #991b1b; }
+.status-izin { background: #e0f2fe; color: #075985; }
+.status-sakit { background: #f3e8ff; color: #6b21a8; }
+.status-pulang-awal { background: #ffedd5; color: #9a3412; }
 
 /* Modal */
 .modal {
@@ -172,12 +177,18 @@ td {
     font-weight: 600;
 }
 
-input, select {
+input, select, textarea {
     width: 100%;
     padding: 0.75rem;
     border: 1px solid #cbd5e1;
     border-radius: 8px;
     outline: none;
+    font-size: 0.875rem;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 80px;
 }
 
 .btn-primary {

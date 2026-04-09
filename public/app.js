@@ -14,25 +14,44 @@ async function loadDashboard() {
     if (!document.getElementById('today-body')) return;
     
     try {
-        const response = await fetch(`${API_URL}/api/absen/hari-ini`);
-        const { logs, summary } = await response.json();
+        const responseSiswa = await fetch(`${API_URL}/api/siswa`);
+        const allSiswaList = await responseSiswa.json();
+        
+        const responseAbsen = await fetch(`${API_URL}/api/absen/hari-ini`);
+        const { logs, summary } = await responseAbsen.json();
         
         document.getElementById('stat-total').innerText = summary.total_siswa;
         document.getElementById('stat-hadir').innerText = summary.total_hadir;
         document.getElementById('stat-terlambat').innerText = summary.total_terlambat;
-        document.getElementById('stat-absen').innerText = summary.total_siswa - (summary.total_hadir + summary.total_terlambat);
+        document.getElementById('stat-izin').innerText = summary.total_izin;
+        document.getElementById('stat-sakit').innerText = summary.total_sakit;
+        document.getElementById('stat-absen').innerText = summary.total_siswa - (summary.total_hadir + summary.total_terlambat + summary.total_izin + summary.total_sakit);
         
+        const searchQuery = document.getElementById('search-dashboard').value.toLowerCase();
         const tbody = document.getElementById('today-body');
         tbody.innerHTML = '';
         
-        logs.forEach(log => {
+        allSiswaList.forEach(siswa => {
+            if (searchQuery && !siswa.nama.toLowerCase().includes(searchQuery)) return;
+
+            const log = logs.find(l => l.siswa_id === siswa.id);
+            const statusClass = log ? log.status.toLowerCase().replace(' ', '-') : 'absen';
+            const statusText = log ? log.status : 'Tanpa Keterangan';
+            
+            // For Izin/Sakit, usually there's no real "check-in/out" time
+            const isManualStatus = log && (log.status === 'Izin' || log.status === 'Sakit');
+            
             const row = `
                 <tr>
-                    <td>${log.siswa.nama}</td>
-                    <td>${log.siswa.kelas}</td>
-                    <td>${log.jam_masuk}</td>
-                    <td>${log.jam_pulang || '-'}</td>
-                    <td><span class="status-badge status-${log.status.toLowerCase()}">${log.status}</span></td>
+                    <td>${siswa.nama}</td>
+                    <td>${siswa.kelas}</td>
+                    <td>${(log && !isManualStatus) ? log.jam_masuk : '-'}</td>
+                    <td>${(log && !isManualStatus) ? (log.jam_pulang || '-') : '-'}</td>
+                    <td><span class="status-badge status-${statusClass}">${statusText}</span></td>
+                    <td>${log ? (log.keterangan || '-') : '-'}</td>
+                    <td>
+                        <button class="btn-primary" style="padding: 4px 8px; font-size: 0.7rem;" onclick="showIzinModal(${siswa.id})">Izin/Pulang</button>
+                    </td>
                 </tr>
             `;
             tbody.innerHTML += row;
@@ -40,6 +59,45 @@ async function loadDashboard() {
     } catch (err) {
         console.error('Error loading dashboard:', err);
     }
+}
+
+// --- Izin Modal Handling ---
+function showIzinModal(siswaId) {
+    document.getElementById('izin-siswa-id').value = siswaId;
+    document.getElementById('modal-izin').style.display = 'flex';
+}
+
+function closeIzinModal() {
+    document.getElementById('modal-izin').style.display = 'none';
+    document.getElementById('form-izin').reset();
+}
+
+if (document.getElementById('form-izin')) {
+    document.getElementById('form-izin').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = {
+            siswa_id: document.getElementById('izin-siswa-id').value,
+            status: document.getElementById('izin-status').value,
+            keterangan: document.getElementById('izin-keterangan').value
+        };
+        
+        try {
+            const res = await fetch(`${API_URL}/api/absen/izin`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            if (result.success) {
+                closeIzinModal();
+                loadDashboard();
+            } else {
+                alert(result.message);
+            }
+        } catch (err) {
+            console.error('Error saving izin:', err);
+        }
+    });
 }
 
 // --- Student Management Logic ---
@@ -173,7 +231,8 @@ async function loadLaporan() {
                     <td>${log.siswa.kelas}</td>
                     <td>${log.jam_masuk}</td>
                     <td>${log.jam_pulang || '-'}</td>
-                    <td><span class="status-badge status-${log.status.toLowerCase()}">${log.status}</span></td>
+                    <td><span class="status-badge status-${log.status.toLowerCase().replace(' ', '-')}">${log.status}</span></td>
+                    <td>${log.keterangan || '-'}</td>
                 </tr>
             `;
             tbody.innerHTML += row;

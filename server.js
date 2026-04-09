@@ -72,6 +72,7 @@ app.post('/api/absen', (req, res) => {
     jam_masuk: time.toTimeString().split(' ')[0],
     jam_pulang: null,
     status: status,
+    keterangan: '',
     created_at: time.toISOString()
   };
 
@@ -79,6 +80,38 @@ app.post('/api/absen', (req, res) => {
   writeDB(db);
 
   res.json({ success: true, message: `Absen Masuk: ${siswa.nama} (${status})` });
+});
+
+// POST /api/absen/izin -> Manual permission (Izin/Pulang Awal)
+app.post('/api/absen/izin', (req, res) => {
+  const { siswa_id, status, keterangan } = req.body;
+  const db = readDB();
+  const dateStr = new Date().toLocaleDateString('en-CA');
+  
+  const existingIndex = db.absensi.findIndex(a => a.siswa_id == siswa_id && a.tanggal === dateStr);
+  const currentTime = new Date().toTimeString().split(' ')[0];
+
+  if (existingIndex !== -1) {
+    // Update existing record
+    db.absensi[existingIndex].status = status;
+    db.absensi[existingIndex].keterangan = keterangan;
+    db.absensi[existingIndex].jam_pulang = currentTime;
+  } else {
+    // Create new record for izin
+    db.absensi.push({
+      id: Date.now(),
+      siswa_id: parseInt(siswa_id),
+      tanggal: dateStr,
+      jam_masuk: currentTime,
+      jam_pulang: currentTime,
+      status: status,
+      keterangan: keterangan,
+      created_at: new Date().toISOString()
+    });
+  }
+
+  writeDB(db);
+  res.json({ success: true, message: 'Status izin berhasil disimpan' });
 });
 
 // --- API Endpoints for Admin Dashboard ---
@@ -135,6 +168,8 @@ app.get('/api/absen/hari-ini', (req, res) => {
   const summary = {
     total_hadir: todayLogs.filter(a => a.status === 'Hadir').length,
     total_terlambat: todayLogs.filter(a => a.status === 'Terlambat').length,
+    total_izin: todayLogs.filter(a => a.status === 'Izin').length,
+    total_sakit: todayLogs.filter(a => a.status === 'Sakit').length,
     total_siswa: db.siswa.length
   };
 
