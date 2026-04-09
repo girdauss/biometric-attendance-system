@@ -119,14 +119,16 @@ function renderSiswaTable(data) {
     tbody.innerHTML = '';
     
     data.forEach(s => {
+        const ids = Array.isArray(s.finger_ids) ? s.finger_ids.join(', ') : (s.finger_id || '-');
         const row = `
             <tr>
                 <td>${s.nis}</td>
                 <td>${s.nama}</td>
                 <td>${s.kelas}</td>
-                <td>${s.finger_id}</td>
-                <td>
-                    <button class="btn-danger" onclick="deleteSiswa(${s.id})">Hapus</button>
+                <td>${ids}</td>
+                <td style="display: flex; gap: 5px;">
+                    <button class="btn-primary" style="padding: 4px 8px; font-size: 0.7rem;" onclick='showEditModal(${JSON.stringify(s)})'>Edit</button>
+                    <button class="btn-danger" style="padding: 4px 8px; font-size: 0.7rem;" onclick="deleteSiswa(${s.id})">Hapus</button>
                 </td>
             </tr>
         `;
@@ -145,8 +147,35 @@ function filterSiswa() {
 
 const modal = document.getElementById('modal-siswa');
 function showAddModal() {
+    document.getElementById('modal-title').innerText = 'Tambah Siswa Baru';
+    document.getElementById('form-siswa').reset();
+    document.getElementById('siswa-id').value = '';
     modal.style.display = 'flex';
 }
+
+function showEditModal(siswa) {
+    document.getElementById('modal-title').innerText = 'Edit Data Siswa';
+    document.getElementById('siswa-id').value = siswa.id;
+    document.getElementById('nama').value = siswa.nama;
+    document.getElementById('nis').value = siswa.nis;
+    document.getElementById('kelas').value = siswa.kelas;
+    
+    // Clear and populate finger IDs
+    document.getElementById('finger_id_1').value = '';
+    document.getElementById('finger_id_2').value = '';
+    document.getElementById('finger_id_3').value = '';
+    
+    if (Array.isArray(siswa.finger_ids)) {
+        if (siswa.finger_ids[0]) document.getElementById('finger_id_1').value = siswa.finger_ids[0];
+        if (siswa.finger_ids[1]) document.getElementById('finger_id_2').value = siswa.finger_ids[1];
+        if (siswa.finger_ids[2]) document.getElementById('finger_id_3').value = siswa.finger_ids[2];
+    } else if (siswa.finger_id) {
+        document.getElementById('finger_id_1').value = siswa.finger_id;
+    }
+    
+    modal.style.display = 'flex';
+}
+
 function closeModal() {
     modal.style.display = 'none';
 }
@@ -154,16 +183,30 @@ function closeModal() {
 if (document.getElementById('form-siswa')) {
     document.getElementById('form-siswa').addEventListener('submit', async (e) => {
         e.preventDefault();
+        
+        const siswaId = document.getElementById('siswa-id').value;
+        const finger_ids = [];
+        const f1 = document.getElementById('finger_id_1').value;
+        const f2 = document.getElementById('finger_id_2').value;
+        const f3 = document.getElementById('finger_id_3').value;
+        
+        if (f1) finger_ids.push(f1);
+        if (f2) finger_ids.push(f2);
+        if (f3) finger_ids.push(f3);
+
         const data = {
             nama: document.getElementById('nama').value,
             nis: document.getElementById('nis').value,
             kelas: document.getElementById('kelas').value,
-            finger_id: parseInt(document.getElementById('finger_id').value)
+            finger_ids: finger_ids
         };
         
+        const url = siswaId ? `${API_URL}/api/siswa/${siswaId}` : `${API_URL}/api/siswa`;
+        const method = siswaId ? 'PUT' : 'POST';
+
         try {
-            const res = await fetch(`${API_URL}/api/siswa`, {
-                method: 'POST',
+            const res = await fetch(url, {
+                method: method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
@@ -175,7 +218,7 @@ if (document.getElementById('form-siswa')) {
                 alert(result.message);
             }
         } catch (err) {
-            console.error('Error adding siswa:', err);
+            console.error('Error saving siswa:', err);
         }
     });
 }

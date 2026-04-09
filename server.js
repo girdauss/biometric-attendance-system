@@ -29,7 +29,10 @@ app.post('/api/absen', (req, res) => {
   }
 
   const db = readDB();
-  const siswa = db.siswa.find(s => s.finger_id === finger_id);
+  // Find student where finger_id matches any ID in their finger_ids array
+  const siswa = db.siswa.find(s => 
+    s.finger_id === finger_id || (Array.isArray(s.finger_ids) && s.finger_ids.includes(finger_id))
+  );
 
   if (!siswa) {
     return res.status(404).json({ success: false, message: 'Fingerprint ID not found' });
@@ -124,11 +127,19 @@ app.get('/api/siswa', (req, res) => {
 
 // POST /api/siswa -> Add new student
 app.post('/api/siswa', (req, res) => {
-  const { nama, nis, kelas, finger_id } = req.body;
+  const { nama, nis, kelas, finger_ids } = req.body; // Expect an array [id1, id2, id3]
   const db = readDB();
   
-  if (db.siswa.find(s => s.finger_id === finger_id)) {
-    return res.status(400).json({ success: false, message: 'Finger ID already registered' });
+  if (!Array.isArray(finger_ids) || finger_ids.length === 0 || finger_ids.length > 3) {
+    return res.status(400).json({ success: false, message: 'Harus 1-3 Finger ID' });
+  }
+
+  // Check if any of the new finger_ids are already registered to anyone
+  const allUsedIds = db.siswa.flatMap(s => Array.isArray(s.finger_ids) ? s.finger_ids : [s.finger_id]);
+  const isDuplicate = finger_ids.some(id => allUsedIds.includes(parseInt(id)));
+
+  if (isDuplicate) {
+    return res.status(400).json({ success: false, message: 'Salah satu Finger ID sudah terdaftar' });
   }
 
   const newSiswa = {
@@ -136,7 +147,7 @@ app.post('/api/siswa', (req, res) => {
     nama,
     nis,
     kelas,
-    finger_id,
+    finger_ids: finger_ids.map(id => parseInt(id)),
     created_at: new Date().toISOString()
   };
 
@@ -153,6 +164,40 @@ app.delete('/api/siswa/:id', (req, res) => {
   db.absensi = db.absensi.filter(a => a.siswa_id != id); // Cascade delete attendance
   writeDB(db);
   res.json({ success: true });
+});
+
+// PUT /api/siswa/:id -> Update student
+app.put('/api/siswa/:id', (req, res) => {
+  const { id } = req.params;
+  const { nama, nis, kelas, finger_ids } = req.body;
+  const db = readDB();
+  
+  const index = db.siswa.findIndex(s => s.id == id);
+  if (index === -1) return res.status(404).json({ success: false, message: 'Siswa tidak ditemukan' });
+
+  if (!Array.isArray(finger_ids) || finger_ids.length === 0 || finger_ids.length > 3) {
+    return res.status(400).json({ success: false, message: 'Harus 1-3 Finger ID' });
+  }
+
+  // Check if any of the new finger_ids are already registered to OTHER students
+  const otherStudents = db.siswa.filter(s => s.id != id);
+  const allUsedIds = otherStudents.flatMap(s => Array.isArray(s.finger_ids) ? s.finger_ids : [s.finger_id]);
+  const isDuplicate = finger_ids.some(fid => allUsedIds.includes(parseInt(fid)));
+
+  if (isDuplicate) {
+    return res.status(400).json({ success: false, message: 'Salah satu Finger ID sudah terdaftar pada siswa lain' });
+  }
+
+  db.siswa[index] = {
+    ...db.siswa[index],
+    nama,
+    nis,
+    kelas,
+    finger_ids: finger_ids.map(fid => parseInt(fid))
+  };
+
+  writeDB(db);
+  res.json({ success: true, message: 'Data siswa berhasil diperbarui' });
 });
 
 // GET /api/absen/hari-ini -> Get today's attendance logs
