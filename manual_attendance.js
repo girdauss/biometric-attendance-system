@@ -28,15 +28,12 @@ async function sendFakeAbsen(fingerId, customTime = null) {
   }
 }
 
-// --- Contoh Penggunaan ---
-
-// 1. Simulasi Hadir (Jam 07:15)
-// sendFakeAbsen(1, "2025-01-01T07:15:00");
-
-// 2. Simulasi Terlambat (Jam 08:30)
-// sendFakeAbsen(2, "2025-01-01T08:30:00");
-
-// 3. Kirim Absen dengan waktu sekarang
 const args = process.argv.slice(2);
 const id = parseInt(args[0]) || 1;
 sendFakeAbsen(id);
+
+//sendFakeAbsen(1, "2026-04-09T06:15:00");
+
+//sendFakeAbsen(1, "2026-04-09T08:30:00");
+
+//sendFakeAbsen(1, "2026-04-09T15:30:00");

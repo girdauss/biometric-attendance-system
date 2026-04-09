@@ -31,6 +31,7 @@ async function loadDashboard() {
                     <td>${log.siswa.nama}</td>
                     <td>${log.siswa.kelas}</td>
                     <td>${log.jam_masuk}</td>
+                    <td>${log.jam_pulang || '-'}</td>
                     <td><span class="status-badge status-${log.status.toLowerCase()}">${log.status}</span></td>
                 </tr>
             `;
@@ -171,6 +172,7 @@ async function loadLaporan() {
                     <td>${log.siswa.nama}</td>
                     <td>${log.siswa.kelas}</td>
                     <td>${log.jam_masuk}</td>
+                    <td>${log.jam_pulang || '-'}</td>
                     <td><span class="status-badge status-${log.status.toLowerCase()}">${log.status}</span></td>
                 </tr>
             `;

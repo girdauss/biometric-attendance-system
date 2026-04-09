@@ -38,21 +38,31 @@ app.post('/api/absen', (req, res) => {
   const time = new Date(timestamp);
   const hour = time.getHours();
   const minute = time.getMinutes();
-  const dateStr = time.toISOString().split('T')[0];
+  const dateStr = time.toLocaleDateString('en-CA'); // YYYY-MM-DD local format
 
-  // Prevent double check-in on the same day
-  const alreadyCheckedIn = db.absensi.find(a => a.siswa_id === siswa.id && a.tanggal === dateStr);
-  if (alreadyCheckedIn) {
-    return res.status(400).json({ success: false, message: 'Already checked in today' });
+  // Check if already checked in today
+  const existingAbsensi = db.absensi.find(a => a.siswa_id === siswa.id && a.tanggal === dateStr);
+
+  if (existingAbsensi) {
+    // Clock-out logic (Pulang)
+    if (existingAbsensi.jam_pulang) {
+      return res.status(400).json({ success: false, message: 'Sudah absen pulang hari ini' });
+    }
+
+    // Assume school finishes at 15:00 (3 PM)
+    if (hour < 15) {
+      return res.status(400).json({ success: false, message: 'Belum jam pulang (Minimal 15:00)' });
+    }
+
+    existingAbsensi.jam_pulang = time.toTimeString().split(' ')[0];
+    writeDB(db);
+    return res.json({ success: true, message: `Absen Pulang: ${siswa.nama}` });
   }
 
+  // Clock-in logic (Masuk)
   let status = 'Hadir';
-  if (hour > 5 || (hour === 6 && minute > 45)) {
+  if (hour > 6 || (hour === 6 && minute > 45)) {
     status = 'Terlambat';
-  }
-  if (hour > 9) {
-    // If check-in after 9 AM, we still mark it, but logic can be adjusted
-    status = 'Sangat Terlambat'; 
   }
 
   const newAbsensi = {
@@ -60,6 +70,7 @@ app.post('/api/absen', (req, res) => {
     siswa_id: siswa.id,
     tanggal: dateStr,
     jam_masuk: time.toTimeString().split(' ')[0],
+    jam_pulang: null,
     status: status,
     created_at: time.toISOString()
   };
@@ -67,7 +78,7 @@ app.post('/api/absen', (req, res) => {
   db.absensi.push(newAbsensi);
   writeDB(db);
 
-  res.json({ success: true, message: `Absen berhasil: ${siswa.nama} (${status})` });
+  res.json({ success: true, message: `Absen Masuk: ${siswa.nama} (${status})` });
 });
 
 // --- API Endpoints for Admin Dashboard ---
@@ -114,7 +125,7 @@ app.delete('/api/siswa/:id', (req, res) => {
 // GET /api/absen/hari-ini -> Get today's attendance logs
 app.get('/api/absen/hari-ini', (req, res) => {
   const db = readDB();
-  const dateStr = new Date().toISOString().split('T')[0];
+  const dateStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local format
   
   const todayLogs = db.absensi.filter(a => a.tanggal === dateStr).map(log => {
     const student = db.siswa.find(s => s.id === log.siswa_id);
