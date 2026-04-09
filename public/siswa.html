@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Absensi - Data Siswa</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">Absensi Sekolah</div>
+        <nav>
+            <a href="index.html">Dashboard</a>
+            <a href="siswa.html" class="active">Data Siswa</a>
+            <a href="laporan.html">Laporan</a>
+        </nav>
+    </div>
+    
+    <main>
+        <header>
+            <h1>Manajemen Data Siswa</h1>
+            <button class="btn-primary" onclick="showAddModal()">+ Tambah Siswa</button>
+        </header>
+
+        <section class="table-container">
+            <input type="text" id="search-siswa" placeholder="Cari nama atau NIS..." oninput="filterSiswa()">
+            <table id="siswa-table">
+                <thead>
+                    <tr>
+                        <th>NIS</th>
+                        <th>Nama</th>
+                        <th>Kelas</th>
+                        <th>Finger ID</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="siswa-body">
+                    <!-- Data will be loaded here -->
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Modal for Adding Student -->
+        <div id="modal-siswa" class="modal">
+            <div class="modal-content">
+                <h2>Tambah Siswa Baru</h2>
+                <form id="form-siswa">
+                    <div class="form-group">
+                        <label>Nama Lengkap</label>
+                        <input type="text" id="nama" required>
+                    </div>
+                    <div class="form-group">
+                        <label>NIS</label>
+                        <input type="text" id="nis" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Kelas</label>
+                        <input type="text" id="kelas" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Finger ID (sesuaikan dengan sensor)</label>
+                        <input type="number" id="finger_id" required>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn-secondary" onclick="closeModal()">Batal</button>
+                        <button type="submit" class="btn-primary">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>

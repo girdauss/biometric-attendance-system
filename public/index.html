@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Absensi - Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">Absensi Sekolah</div>
+        <nav>
+            <a href="index.html" class="active">Dashboard</a>
+            <a href="siswa.html">Data Siswa</a>
+            <a href="laporan.html">Laporan</a>
+        </nav>
+    </div>
+    
+    <main>
+        <header>
+            <h1>Dashboard Kehadiran</h1>
+            <div id="current-time">00:00:00</div>
+        </header>
+
+        <section class="stats">
+            <div class="card">
+                <h3>Total Siswa</h3>
+                <p id="stat-total">0</p>
+            </div>
+            <div class="card hadir">
+                <h3>Hadir</h3>
+                <p id="stat-hadir">0</p>
+            </div>
+            <div class="card terlambat">
+                <h3>Terlambat</h3>
+                <p id="stat-terlambat">0</p>
+            </div>
+            <div class="card absen">
+                <h3>Belum Absen</h3>
+                <p id="stat-absen">0</p>
+            </div>
+        </section>
+
+        <section class="table-container">
+            <h2>Kehadiran Hari Ini</h2>
+            <table id="today-table">
+                <thead>
+                    <tr>
+                        <th>Nama</th>
+                        <th>Kelas</th>
+                        <th>Jam Masuk</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="today-body">
+                    <!-- Data will be loaded here -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>

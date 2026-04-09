@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Absensi - Laporan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">Absensi Sekolah</div>
+        <nav>
+            <a href="index.html">Dashboard</a>
+            <a href="siswa.html">Data Siswa</a>
+            <a href="laporan.html" class="active">Laporan</a>
+        </nav>
+    </div>
+    
+    <main>
+        <header>
+            <h1>Laporan Kehadiran</h1>
+            <button class="btn-primary" onclick="exportToCSV()">Export to CSV</button>
+        </header>
+
+        <section class="filters">
+            <div class="form-group">
+                <label>Filter Tanggal</label>
+                <input type="date" id="filter-date" onchange="loadLaporan()">
+            </div>
+            <div class="form-group">
+                <label>Filter Kelas</label>
+                <select id="filter-kelas" onchange="loadLaporan()">
+                    <option value="all">Semua Kelas</option>
+                    <!-- Options populated via JS -->
+                </select>
+            </div>
+        </section>
+
+        <section class="table-container">
+            <table id="laporan-table">
+                <thead>
+                    <tr>
+                        <th>Tanggal</th>
+                        <th>NIS</th>
+                        <th>Nama</th>
+                        <th>Kelas</th>
+                        <th>Jam Masuk</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="laporan-body">
+                    <!-- Data will be loaded here -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
