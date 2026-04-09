@@ -86,9 +86,13 @@
       "nis": "2324106737",
       "kelas": "Elektronika Industri",
       "finger_id": 100,
-      "created_at": "2026-04-09T08:36:39.038Z"
+      "created_at": "2026-04-09T08:36:39.038Z",
+      "finger_ids": [
+        100,
+        101,
+        102
+      ]
     }
   ],
-  "absensi": [
-  ]
+  "absensi": []
 }

@@ -238,12 +238,63 @@ textarea {
     margin-top: 1.5rem;
 }
 
-/* Filters */
-.filters {
+/* Dynamic Island Clock */
+.dynamic-island-container {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    pointer-events: none;
+}
+
+.dynamic-island {
+    background: #000000;
+    color: #ffffff;
+    padding: 8px 25px;
+    border-radius: 30px;
     display: flex;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    background: var(--white);
-    padding: 1rem;
-    border-radius: 12px;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: auto;
+    min-width: 180px;
+    height: 38px;
+    cursor: default;
+}
+
+.dynamic-island:hover {
+    padding: 12px 40px;
+    height: 50px;
+    min-width: 220px;
+}
+
+.island-time {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+}
+
+.island-dot {
+    width: 8px;
+    height: 8px;
+    background: #10b981; /* Success Green */
+    border-radius: 50%;
+    box-shadow: 0 0 8px #10b981;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(0.95); opacity: 0.8; }
+    50% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+/* Adjust main content to not overlap with Island if needed, 
+   though since it's floating, usually it's fine. */
+header h1 {
+    margin-top: 10px;
 }

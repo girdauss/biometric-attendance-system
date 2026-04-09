@@ -3,9 +3,10 @@ const API_URL = ''; // Relative path since we're serving from the same server
 
 // --- Navigation & Clock ---
 setInterval(() => {
-    const timeElement = document.getElementById('current-time');
+    const timeElement = document.getElementById('island-time');
     if (timeElement) {
-        timeElement.innerText = new Date().toLocaleTimeString();
+        // Enforce 24-hour format
+        timeElement.innerText = new Date().toLocaleTimeString('en-GB', { hour12: false });
     }
 }, 1000);
 

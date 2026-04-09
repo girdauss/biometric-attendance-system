@@ -8,6 +8,14 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Dynamic Island Clock -->
+    <div class="dynamic-island-container">
+        <div class="dynamic-island">
+            <div class="island-dot"></div>
+            <div id="island-time" class="island-time">00:00:00</div>
+        </div>
+    </div>
+
     <div class="sidebar">
         <div class="logo">Absensi Sekolah</div>
         <nav>
@@ -16,12 +24,13 @@
             <a href="laporan.html" class="active">Laporan</a>
         </nav>
     </div>
-    
+
     <main>
         <header>
-            <h1>Laporan Kehadiran</h1>
+            <h1>Rekapitulasi Kehadiran</h1>
             <button class="btn-primary" onclick="exportToCSV()">Export to CSV</button>
         </header>
+
 
         <section class="filters">
             <div class="form-group">
