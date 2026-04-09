@@ -32,16 +32,32 @@
         </header>
 
 
-        <section class="filters">
+        <section class="filters" style="display: flex; gap: 1rem; flex-wrap: wrap;">
             <div class="form-group">
                 <label>Filter Tanggal</label>
                 <input type="date" id="filter-date" onchange="loadLaporan()">
             </div>
             <div class="form-group">
+                <label>Filter Status</label>
+                <select id="filter-status-report" onchange="loadLaporan()">
+                    <option value="all">Semua Status</option>
+                    <option value="Hadir">Hadir</option>
+                    <option value="Terlambat">Terlambat</option>
+                    <option value="Izin">Izin</option>
+                    <option value="Sakit">Sakit</option>
+                    <option value="Pulang Awal">Pulang Awal</option>
+                </select>
+            </div>
+            <div class="form-group">
                 <label>Filter Kelas</label>
                 <select id="filter-kelas" onchange="loadLaporan()">
                     <option value="all">Semua Kelas</option>
-                    <!-- Options populated via JS -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Filter Angkatan</label>
+                <select id="filter-angkatan-report" onchange="loadLaporan()">
+                    <option value="all">Semua Angkatan</option>
                 </select>
             </div>
         </section>
@@ -54,6 +70,7 @@
                         <th>NIS</th>
                         <th>Nama</th>
                         <th>Kelas</th>
+                        <th>Angkatan</th>
                         <th>Jam Masuk</th>
                         <th>Jam Pulang</th>
                         <th>Status</th>

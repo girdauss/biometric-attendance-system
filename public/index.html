@@ -58,15 +58,30 @@
         </section>
 
         <section class="table-container">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; align-items: center;">
                 <h2>Kehadiran Hari Ini</h2>
-                <input type="text" id="search-dashboard" placeholder="Cari nama siswa..." oninput="loadDashboard()" style="width: 300px;">
+                <input type="text" id="search-dashboard" placeholder="Cari nama siswa..." oninput="loadDashboard()" style="width: 200px;">
+                <select id="filter-status-dashboard" onchange="loadDashboard()" style="width: 150px;">
+                    <option value="all">Semua Status</option>
+                    <option value="Hadir">Hadir</option>
+                    <option value="Terlambat">Terlambat</option>
+                    <option value="Izin">Izin</option>
+                    <option value="Sakit">Sakit</option>
+                    <option value="Tanpa Keterangan">Tanpa Keterangan</option>
+                </select>
+                <select id="filter-kelas-dashboard" onchange="loadDashboard()" style="width: 150px;">
+                    <option value="all">Semua Kelas</option>
+                </select>
+                <select id="filter-angkatan-dashboard" onchange="loadDashboard()" style="width: 150px;">
+                    <option value="all">Semua Angkatan</option>
+                </select>
             </div>
             <table id="today-table">
                 <thead>
                     <tr>
                         <th>Nama</th>
                         <th>Kelas</th>
+                        <th>Angkatan</th>
                         <th>Jam Masuk</th>
                         <th>Jam Pulang</th>
                         <th>Status</th>
@@ -101,6 +116,42 @@
                     <div class="modal-actions">
                         <button type="button" class="btn-secondary" onclick="closeIzinModal()">Batal</button>
                         <button type="submit" class="btn-primary">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal for Editing Attendance -->
+        <div id="modal-edit-absen" class="modal">
+            <div class="modal-content">
+                <h2>Edit Jam Kehadiran</h2>
+                <form id="form-edit-absen">
+                    <input type="hidden" id="edit-absen-id">
+                    <div class="form-group">
+                        <label>Jam Masuk</label>
+                        <input type="time" id="edit-jam-masuk" step="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Jam Pulang</label>
+                        <input type="time" id="edit-jam-pulang" step="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="edit-status">
+                            <option value="Hadir">Hadir</option>
+                            <option value="Terlambat">Terlambat</option>
+                            <option value="Izin">Izin</option>
+                            <option value="Sakit">Sakit</option>
+                            <option value="Pulang Awal">Pulang Awal</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Keterangan</label>
+                        <textarea id="edit-keterangan"></textarea>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn-secondary" onclick="closeEditAbsenModal()">Batal</button>
+                        <button type="submit" class="btn-primary">Update</button>
                     </div>
                 </form>
             </div>

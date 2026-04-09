@@ -28,7 +28,10 @@
     <main>
         <header>
             <h1>Manajemen Data Siswa</h1>
-            <button class="btn-primary" onclick="showAddModal()">+ Tambah Siswa</button>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button id="btn-batch-delete" class="btn-danger" style="display: none; padding: 0.5rem 1rem;" onclick="batchDeleteSiswa()">Hapus Terpilih</button>
+                <button class="btn-primary" onclick="showAddModal()">+ Tambah Siswa</button>
+            </div>
         </header>
 
         <section class="table-container">
@@ -36,9 +39,11 @@
             <table id="siswa-table">
                 <thead>
                     <tr>
+                        <th style="width: 40px;"><input type="checkbox" id="select-all-siswa" onclick="toggleSelectAll(this)"></th>
                         <th>NIS</th>
                         <th>Nama</th>
                         <th>Kelas</th>
+                        <th>Angkatan</th>
                         <th>Finger ID</th>
                         <th>Aksi</th>
                     </tr>
@@ -49,7 +54,7 @@
             </table>
         </section>
 
-        <!-- Modal for Adding Student -->
+        <!-- Modal for Adding/Editing Student -->
         <div id="modal-siswa" class="modal">
             <div class="modal-content">
                 <h2 id="modal-title">Tambah Siswa Baru</h2>
@@ -66,6 +71,10 @@
                     <div class="form-group">
                         <label>Kelas</label>
                         <input type="text" id="kelas" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Angkatan</label>
+                        <input type="text" id="angkatan" placeholder="Contoh: 2023 atau Angkatan 12">
                     </div>
                     <div class="form-group">
                         <label>Finger ID (Maksimal 3 Jari)</label>

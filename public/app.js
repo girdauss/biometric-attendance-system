@@ -29,29 +29,62 @@ async function loadDashboard() {
         document.getElementById('stat-absen').innerText = summary.total_siswa - (summary.total_hadir + summary.total_terlambat + summary.total_izin + summary.total_sakit);
         
         const searchQuery = document.getElementById('search-dashboard').value.toLowerCase();
+        const statusFilter = document.getElementById('filter-status-dashboard').value;
+        const kelasFilter = document.getElementById('filter-kelas-dashboard').value;
+        const angkatanFilter = document.getElementById('filter-angkatan-dashboard').value;
+
+        // Populate Kelas Filter
+        const kelasSelect = document.getElementById('filter-kelas-dashboard');
+        if (kelasSelect.options.length === 1) {
+            const classes = [...new Set(allSiswaList.map(s => s.kelas))].sort();
+            classes.forEach(k => {
+                const opt = document.createElement('option');
+                opt.value = k;
+                opt.innerText = k;
+                kelasSelect.appendChild(opt);
+            });
+        }
+
+        // Populate Angkatan Filter
+        const angkatanSelect = document.getElementById('filter-angkatan-dashboard');
+        if (angkatanSelect && angkatanSelect.options.length === 1) {
+            const batches = [...new Set(allSiswaList.map(s => s.angkatan).filter(a => a))].sort();
+            batches.forEach(b => {
+                const opt = document.createElement('option');
+                opt.value = b;
+                opt.innerText = b;
+                angkatanSelect.appendChild(opt);
+            });
+        }
+
         const tbody = document.getElementById('today-body');
         tbody.innerHTML = '';
         
         allSiswaList.forEach(siswa => {
-            if (searchQuery && !siswa.nama.toLowerCase().includes(searchQuery)) return;
-
             const log = logs.find(l => l.siswa_id === siswa.id);
-            const statusClass = log ? log.status.toLowerCase().replace(' ', '-') : 'absen';
             const statusText = log ? log.status : 'Tanpa Keterangan';
             
-            // For Izin/Sakit, usually there's no real "check-in/out" time
+            // Apply Filters
+            if (searchQuery && !siswa.nama.toLowerCase().includes(searchQuery)) return;
+            if (statusFilter !== 'all' && statusText !== statusFilter) return;
+            if (kelasFilter !== 'all' && siswa.kelas !== kelasFilter) return;
+            if (angkatanFilter !== 'all' && (siswa.angkatan || '') !== angkatanFilter) return;
+
+            const statusClass = log ? log.status.toLowerCase().replace(' ', '-') : 'absen';
             const isManualStatus = log && (log.status === 'Izin' || log.status === 'Sakit');
             
             const row = `
                 <tr>
                     <td>${siswa.nama}</td>
                     <td>${siswa.kelas}</td>
+                    <td>${siswa.angkatan || '-'}</td>
                     <td>${(log && !isManualStatus) ? log.jam_masuk : '-'}</td>
                     <td>${(log && !isManualStatus) ? (log.jam_pulang || '-') : '-'}</td>
                     <td><span class="status-badge status-${statusClass}">${statusText}</span></td>
                     <td>${log ? (log.keterangan || '-') : '-'}</td>
-                    <td>
+                    <td style="display: flex; gap: 5px;">
                         <button class="btn-primary" style="padding: 4px 8px; font-size: 0.7rem;" onclick="showIzinModal(${siswa.id})">Izin/Pulang</button>
+                        ${log ? `<button class="btn-secondary" style="padding: 4px 8px; font-size: 0.7rem;" onclick='showEditAbsenModal(${JSON.stringify(log)})'>Edit</button>` : ''}
                     </td>
                 </tr>
             `;
@@ -60,6 +93,42 @@ async function loadDashboard() {
     } catch (err) {
         console.error('Error loading dashboard:', err);
     }
+}
+
+// --- Attendance Edit Modal ---
+function showEditAbsenModal(log) {
+    document.getElementById('edit-absen-id').value = log.id;
+    document.getElementById('edit-jam-masuk').value = log.jam_masuk;
+    document.getElementById('edit-jam-pulang').value = log.jam_pulang || '';
+    document.getElementById('edit-status').value = log.status;
+    document.getElementById('edit-keterangan').value = log.keterangan || '';
+    document.getElementById('modal-edit-absen').style.display = 'flex';
+}
+
+function closeEditAbsenModal() {
+    document.getElementById('modal-edit-absen').style.display = 'none';
+}
+
+if (document.getElementById('form-edit-absen')) {
+    document.getElementById('form-edit-absen').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit-absen-id').value;
+        const data = {
+            jam_masuk: document.getElementById('edit-jam-masuk').value,
+            jam_pulang: document.getElementById('edit-jam-pulang').value,
+            status: document.getElementById('edit-status').value,
+            keterangan: document.getElementById('edit-keterangan').value
+        };
+        try {
+            await fetch(`${API_URL}/api/absen/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            closeEditAbsenModal();
+            loadDashboard();
+        } catch (err) { console.error(err); }
+    });
 }
 
 // --- Izin Modal Handling ---
@@ -123,9 +192,11 @@ function renderSiswaTable(data) {
         const ids = Array.isArray(s.finger_ids) ? s.finger_ids.join(', ') : (s.finger_id || '-');
         const row = `
             <tr>
+                <td><input type="checkbox" class="siswa-checkbox" value="${s.id}" onclick="updateBatchDeleteBtn()"></td>
                 <td>${s.nis}</td>
                 <td>${s.nama}</td>
                 <td>${s.kelas}</td>
+                <td>${s.angkatan || '-'}</td>
                 <td>${ids}</td>
                 <td style="display: flex; gap: 5px;">
                     <button class="btn-primary" style="padding: 4px 8px; font-size: 0.7rem;" onclick='showEditModal(${JSON.stringify(s)})'>Edit</button>
@@ -135,6 +206,33 @@ function renderSiswaTable(data) {
         `;
         tbody.innerHTML += row;
     });
+}
+
+function toggleSelectAll(master) {
+    const checkboxes = document.querySelectorAll('.siswa-checkbox');
+    checkboxes.forEach(cb => cb.checked = master.checked);
+    updateBatchDeleteBtn();
+}
+
+function updateBatchDeleteBtn() {
+    const selectedCount = document.querySelectorAll('.siswa-checkbox:checked').length;
+    document.getElementById('btn-batch-delete').style.display = selectedCount > 0 ? 'block' : 'none';
+}
+
+async function batchDeleteSiswa() {
+    const selected = Array.from(document.querySelectorAll('.siswa-checkbox:checked')).map(cb => parseInt(cb.value));
+    if (!confirm(`Hapus ${selected.length} siswa terpilih?`)) return;
+    
+    try {
+        await fetch(`${API_URL}/api/siswa/batch-delete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids: selected })
+        });
+        loadSiswa();
+        document.getElementById('select-all-siswa').checked = false;
+        updateBatchDeleteBtn();
+    } catch (err) { console.error(err); }
 }
 
 function filterSiswa() {
@@ -160,8 +258,8 @@ function showEditModal(siswa) {
     document.getElementById('nama').value = siswa.nama;
     document.getElementById('nis').value = siswa.nis;
     document.getElementById('kelas').value = siswa.kelas;
+    document.getElementById('angkatan').value = siswa.angkatan || '';
     
-    // Clear and populate finger IDs
     document.getElementById('finger_id_1').value = '';
     document.getElementById('finger_id_2').value = '';
     document.getElementById('finger_id_3').value = '';
@@ -170,10 +268,7 @@ function showEditModal(siswa) {
         if (siswa.finger_ids[0]) document.getElementById('finger_id_1').value = siswa.finger_ids[0];
         if (siswa.finger_ids[1]) document.getElementById('finger_id_2').value = siswa.finger_ids[1];
         if (siswa.finger_ids[2]) document.getElementById('finger_id_3').value = siswa.finger_ids[2];
-    } else if (siswa.finger_id) {
-        document.getElementById('finger_id_1').value = siswa.finger_id;
     }
-    
     modal.style.display = 'flex';
 }
 
@@ -184,21 +279,17 @@ function closeModal() {
 if (document.getElementById('form-siswa')) {
     document.getElementById('form-siswa').addEventListener('submit', async (e) => {
         e.preventDefault();
-        
         const siswaId = document.getElementById('siswa-id').value;
         const finger_ids = [];
-        const f1 = document.getElementById('finger_id_1').value;
-        const f2 = document.getElementById('finger_id_2').value;
-        const f3 = document.getElementById('finger_id_3').value;
-        
-        if (f1) finger_ids.push(f1);
-        if (f2) finger_ids.push(f2);
-        if (f3) finger_ids.push(f3);
+        if (document.getElementById('finger_id_1').value) finger_ids.push(document.getElementById('finger_id_1').value);
+        if (document.getElementById('finger_id_2').value) finger_ids.push(document.getElementById('finger_id_2').value);
+        if (document.getElementById('finger_id_3').value) finger_ids.push(document.getElementById('finger_id_3').value);
 
         const data = {
             nama: document.getElementById('nama').value,
             nis: document.getElementById('nis').value,
             kelas: document.getElementById('kelas').value,
+            angkatan: document.getElementById('angkatan').value,
             finger_ids: finger_ids
         };
         
@@ -215,12 +306,8 @@ if (document.getElementById('form-siswa')) {
             if (result.success) {
                 closeModal();
                 loadSiswa();
-            } else {
-                alert(result.message);
-            }
-        } catch (err) {
-            console.error('Error saving siswa:', err);
-        }
+            } else { alert(result.message); }
+        } catch (err) { console.error(err); }
     });
 }
 
@@ -229,9 +316,7 @@ async function deleteSiswa(id) {
     try {
         await fetch(`${API_URL}/api/siswa/${id}`, { method: 'DELETE' });
         loadSiswa();
-    } catch (err) {
-        console.error('Error deleting siswa:', err);
-    }
+    } catch (err) { console.error(err); }
 }
 
 // --- Report Logic ---
@@ -239,16 +324,20 @@ async function loadLaporan() {
     if (!document.getElementById('laporan-body')) return;
     
     try {
-        const response = await fetch(`${API_URL}/api/absen/rekap`);
-        const logs = await response.json();
+        const responseSiswa = await fetch(`${API_URL}/api/siswa`);
+        const allSiswaReport = await responseSiswa.json();
+
+        const responseAbsen = await fetch(`${API_URL}/api/absen/rekap`);
+        const logs = await responseAbsen.json();
         
         const filterDate = document.getElementById('filter-date').value;
+        const filterStatus = document.getElementById('filter-status-report').value;
         const filterKelas = document.getElementById('filter-kelas').value;
+        const filterAngkatan = document.getElementById('filter-angkatan-report').value;
         
-        // Populate Kelas Filter options if empty
         const kelasSelect = document.getElementById('filter-kelas');
         if (kelasSelect.options.length === 1) {
-            const classes = [...new Set(logs.map(l => l.siswa.kelas))];
+            const classes = [...new Set(allSiswaReport.map(s => s.kelas))].sort();
             classes.forEach(k => {
                 const opt = document.createElement('option');
                 opt.value = k;
@@ -257,10 +346,23 @@ async function loadLaporan() {
             });
         }
 
+        const angkatanSelect = document.getElementById('filter-angkatan-report');
+        if (angkatanSelect && angkatanSelect.options.length === 1) {
+            const batches = [...new Set(allSiswaReport.map(s => s.angkatan).filter(a => a))].sort();
+            batches.forEach(b => {
+                const opt = document.createElement('option');
+                opt.value = b;
+                opt.innerText = b;
+                angkatanSelect.appendChild(opt);
+            });
+        }
+
         const filtered = logs.filter(log => {
             const dateMatch = filterDate ? log.tanggal === filterDate : true;
+            const statusMatch = filterStatus === 'all' ? true : log.status === filterStatus;
             const kelasMatch = filterKelas === 'all' ? true : log.siswa.kelas === filterKelas;
-            return dateMatch && kelasMatch;
+            const angkatanMatch = filterAngkatan === 'all' ? true : (log.siswa.angkatan || '') === filterAngkatan;
+            return dateMatch && statusMatch && kelasMatch && angkatanMatch;
         });
 
         const tbody = document.getElementById('laporan-body');
@@ -273,6 +375,7 @@ async function loadLaporan() {
                     <td>${log.siswa.nis}</td>
                     <td>${log.siswa.nama}</td>
                     <td>${log.siswa.kelas}</td>
+                    <td>${log.siswa.angkatan || '-'}</td>
                     <td>${log.jam_masuk}</td>
                     <td>${log.jam_pulang || '-'}</td>
                     <td><span class="status-badge status-${log.status.toLowerCase().replace(' ', '-')}">${log.status}</span></td>
@@ -281,9 +384,7 @@ async function loadLaporan() {
             `;
             tbody.innerHTML += row;
         });
-    } catch (err) {
-        console.error('Error loading laporan:', err);
-    }
+    } catch (err) { console.error(err); }
 }
 
 function exportToCSV() {
@@ -291,26 +392,21 @@ function exportToCSV() {
     let csv = [];
     for (let i = 0; i < table.rows.length; i++) {
         let row = [], cols = table.rows[i].querySelectorAll('td, th');
-        for (let j = 0; j < cols.length; j++) row.push('"' + cols[j].innerText + '"');
+        for (let j = 0; j < cols.length - 1; j++) row.push('"' + cols[j].innerText + '"');
         csv.push(row.join(','));
     }
     const csvContent = "data:text/csv;charset=utf-8," + csv.join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `laporan_absensi_${new Date().toLocaleDateString()}.csv`);
+    link.setAttribute("download", `laporan_absensi.csv`);
     document.body.appendChild(link);
     link.click();
 }
 
-// --- Initial Load ---
 document.addEventListener('DOMContentLoaded', () => {
     loadDashboard();
     loadSiswa();
     loadLaporan();
-    
-    // Auto-refresh Dashboard every 5 seconds
-    if (document.getElementById('today-body')) {
-        setInterval(loadDashboard, 5000);
-    }
+    if (document.getElementById('today-body')) setInterval(loadDashboard, 5000);
 });

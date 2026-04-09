@@ -127,18 +127,15 @@ app.get('/api/siswa', (req, res) => {
 
 // POST /api/siswa -> Add new student
 app.post('/api/siswa', (req, res) => {
-  const { nama, nis, kelas, finger_ids } = req.body; // Expect an array [id1, id2, id3]
+  const { nama, nis, kelas, angkatan, finger_ids } = req.body; 
   const db = readDB();
   
   if (!Array.isArray(finger_ids) || finger_ids.length === 0 || finger_ids.length > 3) {
     return res.status(400).json({ success: false, message: 'Harus 1-3 Finger ID' });
   }
 
-  // Check if any of the new finger_ids are already registered to anyone
-  const allUsedIds = db.siswa.flatMap(s => Array.isArray(s.finger_ids) ? s.finger_ids : [s.finger_id]);
-  const isDuplicate = finger_ids.some(id => allUsedIds.includes(parseInt(id)));
-
-  if (isDuplicate) {
+  const allUsedIds = db.siswa.flatMap(s => s.finger_ids || [s.finger_id]);
+  if (finger_ids.some(id => allUsedIds.includes(parseInt(id)))) {
     return res.status(400).json({ success: false, message: 'Salah satu Finger ID sudah terdaftar' });
   }
 
@@ -147,6 +144,7 @@ app.post('/api/siswa', (req, res) => {
     nama,
     nis,
     kelas,
+    angkatan: angkatan || '',
     finger_ids: finger_ids.map(id => parseInt(id)),
     created_at: new Date().toISOString()
   };
@@ -156,36 +154,19 @@ app.post('/api/siswa', (req, res) => {
   res.json({ success: true, data: newSiswa });
 });
 
-// DELETE /api/siswa/:id -> Delete student
-app.delete('/api/siswa/:id', (req, res) => {
-  const { id } = req.params;
-  const db = readDB();
-  db.siswa = db.siswa.filter(s => s.id != id);
-  db.absensi = db.absensi.filter(a => a.siswa_id != id); // Cascade delete attendance
-  writeDB(db);
-  res.json({ success: true });
-});
-
 // PUT /api/siswa/:id -> Update student
 app.put('/api/siswa/:id', (req, res) => {
   const { id } = req.params;
-  const { nama, nis, kelas, finger_ids } = req.body;
+  const { nama, nis, kelas, angkatan, finger_ids } = req.body;
   const db = readDB();
   
   const index = db.siswa.findIndex(s => s.id == id);
   if (index === -1) return res.status(404).json({ success: false, message: 'Siswa tidak ditemukan' });
 
-  if (!Array.isArray(finger_ids) || finger_ids.length === 0 || finger_ids.length > 3) {
-    return res.status(400).json({ success: false, message: 'Harus 1-3 Finger ID' });
-  }
-
-  // Check if any of the new finger_ids are already registered to OTHER students
   const otherStudents = db.siswa.filter(s => s.id != id);
-  const allUsedIds = otherStudents.flatMap(s => Array.isArray(s.finger_ids) ? s.finger_ids : [s.finger_id]);
-  const isDuplicate = finger_ids.some(fid => allUsedIds.includes(parseInt(fid)));
-
-  if (isDuplicate) {
-    return res.status(400).json({ success: false, message: 'Salah satu Finger ID sudah terdaftar pada siswa lain' });
+  const allUsedIds = otherStudents.flatMap(s => s.finger_ids || [s.finger_id]);
+  if (finger_ids.some(fid => allUsedIds.includes(parseInt(fid)))) {
+    return res.status(400).json({ success: false, message: 'Finger ID sudah digunakan siswa lain' });
   }
 
   db.siswa[index] = {
@@ -193,11 +174,45 @@ app.put('/api/siswa/:id', (req, res) => {
     nama,
     nis,
     kelas,
+    angkatan: angkatan || '',
     finger_ids: finger_ids.map(fid => parseInt(fid))
   };
 
   writeDB(db);
-  res.json({ success: true, message: 'Data siswa berhasil diperbarui' });
+  res.json({ success: true });
+});
+
+// POST /api/siswa/batch-delete -> Batch delete students
+app.post('/api/siswa/batch-delete', (req, res) => {
+  const { ids } = req.body; // Array of IDs
+  if (!Array.isArray(ids)) return res.status(400).json({ success: false });
+
+  const db = readDB();
+  db.siswa = db.siswa.filter(s => !ids.includes(s.id));
+  db.absensi = db.absensi.filter(a => !ids.includes(a.siswa_id));
+  writeDB(db);
+  res.json({ success: true });
+});
+
+// PUT /api/absen/:id -> Update attendance record (Manual Edit)
+app.put('/api/absen/:id', (req, res) => {
+  const { id } = req.params;
+  const { jam_masuk, jam_pulang, status, keterangan } = req.body;
+  const db = readDB();
+  
+  const index = db.absensi.findIndex(a => a.id == id);
+  if (index === -1) return res.status(404).json({ success: false });
+
+  db.absensi[index] = {
+    ...db.absensi[index],
+    jam_masuk,
+    jam_pulang,
+    status,
+    keterangan
+  };
+
+  writeDB(db);
+  res.json({ success: true });
 });
 
 // GET /api/absen/hari-ini -> Get today's attendance logs

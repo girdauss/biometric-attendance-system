@@ -148,6 +148,18 @@ td {
 .status-sakit { background: #f3e8ff; color: #6b21a8; }
 .status-pulang-awal { background: #ffedd5; color: #9a3412; }
 
+/* Table Checkbox */
+table input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: var(--secondary);
+}
+
+th:first-child, td:first-child {
+    text-align: center;
+}
+
 /* Modal */
 .modal {
     display: none;
