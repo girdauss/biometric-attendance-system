@@ -1,4 +1,4 @@
-# 🎓 Sistem Absensi Sekolah Real-Time (ESP32 Integration)
+# 🫆 Biometric Attendance System
 
 Sistem absensi modern yang dirancang untuk sekolah, mengintegrasikan sensor sidik jari ESP32 dengan dashboard admin berbasis web yang responsif. Sistem ini mencakup manajemen data siswa, rekapitulasi kehadiran otomatis, dan fitur perizinan manual.
 
