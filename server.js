@@ -29,7 +29,6 @@ app.post('/api/absen', (req, res) => {
   }
 
   const db = readDB();
-  // Find student where finger_id matches any ID in their finger_ids array
   const siswa = db.siswa.find(s => 
     s.finger_id === finger_id || (Array.isArray(s.finger_ids) && s.finger_ids.includes(finger_id))
   );
@@ -38,7 +37,17 @@ app.post('/api/absen', (req, res) => {
     return res.status(404).json({ success: false, message: 'Fingerprint ID not found' });
   }
 
-  const time = new Date(timestamp);
+  // Determine timestamp: Real-time scan or simulation?
+  let time;
+  // If the request comes from ESP32 (usually doesn't provide a precise timestamp 
+  // or sends a placeholder), use current server time.
+  if (!timestamp || timestamp.startsWith("202")) { 
+    // If timestamp starts with 202x, it's likely a simulation or placeholder.
+    // For real production use from ESP32, we prefer server's clock.
+    time = new Date(); 
+  } else {
+    time = new Date(timestamp);
+  }
   const hour = time.getHours();
   const minute = time.getMinutes();
   const dateStr = time.toLocaleDateString('en-CA'); // YYYY-MM-DD local format
